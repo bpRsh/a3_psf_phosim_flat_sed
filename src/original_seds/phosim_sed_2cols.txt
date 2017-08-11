@@ -1,0 +1,69 @@
+function spallf () {
+    # spmk : create two folders
+    mkdir html rst rst/_static
+    
+    # copy custom.css file to rst/_static
+    cp ~/Applications/custom.css rst/_static/
+    
+    # spq : create Makefile source build
+    # source ==> _static _templates conf.py, index.rst
+    # build, _static, _templates folders are empty.
+    # make doctest used source/index.rst
+    sphinx-quickstart -q -p "Research" -a "Bhishan Poudel" -v 1 \
+    --ext-autodoc --ext-doctest --ext-viewcode --ext-imgmath \
+    --no-batchfile --sep
+    
+    # spconf : copy edit_conf file 
+    cp ~/Applications/edit_sphinx_conf.py edit_sphinx_conf.py
+    
+    # py ed* : edit conf file (head -25 source/conf.py)
+    # This adds a path ./scripts/
+    python3 edit_sphinx_conf.py
+    
+    # Create build/doctrees and build/html
+    # doctrees has 2 files.
+    # html has  two non-empty folders
+    # html has 5 files and main is **index.html**
+    make html
+    
+
+    # spar FOLDER_NAME : Create rst files
+    # if output folder does not exist, it is created.
+    # Auto create rst files to OUTPUT from INPUT
+    sphinx-apidoc -o rst "$1"
+    
+    # spcp: Copy conf and rename modules.rst
+    # ls rst
+    cp source/conf.py rst/; mv rst/modules.rst rst/index.rst 
+    
+    # spawk FOLDER_NAME: Add path to conf.py
+    # head -25 rst/conf.py
+    awk -v n=25 -v s="sys.path.append('./$1')" 'NR == n {print s} {print}' \
+    rst/conf.py > rst/conf_new.py; 
+    
+    rm rst/conf.py; mv rst/conf_new.py rst/conf.py
+    
+    # spawk2 : Add Table of Contents to the rst/index.rst
+    # head -5 rst/index.rst
+    awk -v n=1 -v s=".. contents:: Table of Contents\n   :depth: 3\n\n" \
+                    'NR == n {print s} {print}' \
+                  rst/index.rst > rst/tmp; mv rst/tmp rst/index.rst
+    
+    
+    # spb : Build 
+    sphinx-build -b html rst html
+    
+    # sprm: Remove tmp files
+    # We need only Makefile html and rst
+    # Along with out new scripts, obviously!
+    #rm -rf edit_sphinx_conf.py
+    
+    # source and build are required for doctest
+    rm -rf "$1"/__pycache__
+    
+    # spo: open html
+    open html/index.html
+    
+    # spmk; spq; spconf; python3 edit_sphinx_conf.py; make html;
+    # spar FOLDER; spcp; spawk FOLDER; spb; sprm; spo
+     }

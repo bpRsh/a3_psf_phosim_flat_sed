@@ -1,0 +1,148 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>a8_weighted_normalized_psf &#8212; Bhishan&#39;s 1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/sidebar.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="b1_sum_narrowbands" href="b1_sum_narrowbands.html" />
+    <link rel="prev" title="a7_psf_sum_all_pixels" href="a7_psf_sum_all_pixels.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="b1_sum_narrowbands.html" title="b1_sum_narrowbands"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="a7_psf_sum_all_pixels.html" title="a7_psf_sum_all_pixels"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bhishan&#39;s 1 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-a8_weighted_normalized_psf">
+<span id="a8-weighted-normalized-psf"></span><h1>a8_weighted_normalized_psf<a class="headerlink" href="#module-a8_weighted_normalized_psf" title="Permalink to this headline">¶</a></h1>
+<p>This program creates weighted average of the input fitsfiles.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><p class="first">phosim_normalized_psf/psf*.fits</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><p class="first">weighted_psf.fits</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Info:</th><td class="field-body"><ol class="first arabic simple">
+<li>This program creates weighted average of the input fitsfiles.
+Algorithm: output = data_i * weight_i / sum(weight)</li>
+<li>The weight range 1 to 1.2 are the average flux ratio of 100 f606 and f814
+galaxies. (refer: ~/phosim/simdatabase/average_flux_ratio.py)</li>
+</ol>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Runtime:</th><td class="field-body"><p class="first last">3 sec</p>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="function">
+<dt id="a8_weighted_normalized_psf.weighted_psf">
+<code class="descclassname">a8_weighted_normalized_psf.</code><code class="descname">weighted_psf</code><span class="sig-paren">(</span><em>indir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/a8_weighted_normalized_psf.html#weighted_psf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#a8_weighted_normalized_psf.weighted_psf" title="Permalink to this definition">¶</a></dt>
+<dd><p>This program creates the weighted psf.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="a7_psf_sum_all_pixels.html"
+                        title="previous chapter">a7_psf_sum_all_pixels</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="b1_sum_narrowbands.html"
+                        title="next chapter">b1_sum_narrowbands</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/a8_weighted_normalized_psf.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="b1_sum_narrowbands.html" title="b1_sum_narrowbands"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="a7_psf_sum_all_pixels.html" title="a7_psf_sum_all_pixels"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bhishan&#39;s 1 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Bhishan Poudel.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,487 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>a2_create_narrowband_seds &#8212; Bhishan&#39;s 1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/sidebar.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bhishan&#39;s 1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for a2_create_narrowband_seds</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># Author    : Bhishan Poudel; Physics Graduate Student, Ohio University</span>
+<span class="c1"># Date      : Jun 22, 2016</span>
+<span class="c1"># Last update: Jul 18, 2017 Tue</span>
+
+<span class="sd">&quot;&quot;&quot;This program creates 21 narrowbands and one broadband seds.</span>
+
+<span class="sd">:Inputs:</span>
+<span class="sd">    original_seds/exp9_pf_12gyr_interpolated.cat</span>
+
+<span class="sd">:Outputs: </span>
+<span class="sd">    narrowband_seds/broadband.sed</span>
+<span class="sd">    </span>
+<span class="sd">    narrowband_seds/narrowband*.sed</span>
+<span class="sd">    </span>
+<span class="sd">:Runtime: </span>
+<span class="sd">    15 sec</span>
+
+<span class="sd">:Info:</span>
+
+<span class="sd">  1. This program takes in ONE input_sed_file and creates TWENTY_ONE output_sed files.</span>
+
+<span class="sd">  2. The input sed file has two columns: wavelength (nm) and flux (ergs/cm^2/s/nm)</span>
+<span class="sd">      wavelength varies from 300 nm to 1200 nm.</span>
+
+<span class="sd">  3. We can plot wavelength vs flux and see the sed, which looks like Capital PI.</span>
+
+<span class="sd">  4. To create output_seds from this input_sed_file, we first decrease the</span>
+<span class="sd">     flux at 500 nm wavelength by a factor of 100 so that when phosim software</span>
+<span class="sd">     uses this flux to normalize all the values, it will have lesser impact.</span>
+<span class="sd">     </span>
+<span class="sd">     i.e. sed_flat.txt    : 500.000  3.97290e-12</span>
+<span class="sd">     </span>
+<span class="sd">     narrowband*.sed : 500.000  3.9728999999999995e-14</span>
+<span class="sd">     </span>
+<span class="sd">     broadband.sed   : 500.000  3.9728999999999995e-14</span>
+<span class="sd">     </span>
+<span class="sd">  5.  Now, for one narrowband we look at the LSST_RED_BAND_FILTER_FILE </span>
+<span class="sd">      there we see that the values of wavelength where transmission is </span>
+<span class="sd">      NOT &lt;= 5% are 531-696 nm.</span>
+
+<span class="sd">  6. So, we will take the wavelength range only between this range and set all</span>
+<span class="sd">     the other wavelength fluxes to zero EXCEPT for 500 nm case.</span>
+
+
+<span class="sd">:sed_info:</span>
+
+<span class="sd">    sed file: original_seds/exp9_pf.cat</span>
+<span class="sd">    </span>
+<span class="sd">    column0 : wavelength (1000-12000 Angstron)</span>
+<span class="sd">    </span>
+<span class="sd">    column5 : flux for 6 Gyr old star.</span>
+<span class="sd">    </span>
+<span class="sd">    column11 : flux for 12 Gyr old star.</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">:filter_info:</span>
+
+<span class="sd">    source_red_band_filter_lsst : phosim/data/lsst/filter_2.txt</span>
+<span class="sd">    </span>
+<span class="sd">    We take wavelength range such that transmission &lt;= 5%,</span>
+<span class="sd">    and we get 531 nm - 696 nm.</span>
+<span class="sd">    </span>
+<span class="sd">    We can plot sed_file and see the flat peak and negligible bottom fluxes.</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># Imports</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="c1"># Global Variables</span>
+<span class="n">infile</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;original_seds/exp9_pf_6gyr_interpolated.cat&#39;</span>
+<span class="n">lookup</span> <span class="o">=</span> <span class="s1">&#39;5000.0&#39;</span>
+<span class="n">outfolder</span> <span class="o">=</span> <span class="s1">&#39;narrowband_seds&#39;</span>
+
+<div class="viewcode-block" id="replace_outdir"><a class="viewcode-back" href="../a2_create_narrowband_seds.html#a2_create_narrowband_seds.replace_outdir">[docs]</a><span class="k">def</span> <span class="nf">replace_outdir</span><span class="p">(</span><span class="n">outdir</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Replace a folder.&quot;&quot;&quot;</span>   
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">outdir</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Replacing folder: </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">outdir</span><span class="p">)</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Making new folder: </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">outdir</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="replace_line"><a class="viewcode-back" href="../a2_create_narrowband_seds.html#a2_create_narrowband_seds.replace_line">[docs]</a><span class="k">def</span> <span class="nf">replace_line</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="n">line_num</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39; This function replaces a given line number.</span>
+<span class="sd">    </span>
+<span class="sd">        :Usage: replace_line(infile, line_num, text)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">lines</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">lines</span><span class="p">[</span><span class="n">line_num</span><span class="p">]</span> <span class="o">=</span> <span class="n">text</span>
+    <span class="n">lines</span><span class="p">[</span><span class="n">line_num</span><span class="p">]</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="n">line_num</span><span class="p">]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="get_data"><a class="viewcode-back" href="../a2_create_narrowband_seds.html#a2_create_narrowband_seds.get_data">[docs]</a><span class="k">def</span> <span class="nf">get_data</span><span class="p">(</span><span class="n">infile</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get data.&quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="c1">#print(&#39;data[0] = \n&#39;, data[0])</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+<div class="viewcode-block" id="get_ncom_lines"><a class="viewcode-back" href="../a2_create_narrowband_seds.html#a2_create_narrowband_seds.get_ncom_lines">[docs]</a><span class="k">def</span> <span class="nf">get_ncom_lines</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get number of comment lines. &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">get_data</span><span class="p">(</span><span class="n">infile</span><span class="p">)</span>
+    <span class="n">ncom_lines</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">):</span>
+            <span class="n">ncom_lines</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">break</span>
+    <span class="c1">#print(&#39;{} {} {}&#39;.format(&#39;No of comment_lines = &#39;, ncom_lines, &#39;\n\n&#39;))</span>
+    <span class="k">return</span> <span class="n">ncom_lines</span></div>
+
+
+<div class="viewcode-block" id="get_normalizing_line"><a class="viewcode-back" href="../a2_create_narrowband_seds.html#a2_create_narrowband_seds.get_normalizing_line">[docs]</a><span class="k">def</span> <span class="nf">get_normalizing_line</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="n">lookup</span><span class="p">,</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get normalizing line of 500 nm for phosim.</span>
+<span class="sd">    </span>
+<span class="sd">    :Example: </span>
+<span class="sd">      for exp9_pf_6gyr_interpolated.cat</span>
+<span class="sd">      </span>
+<span class="sd">      before: 5000.0 5.297875e-05</span>
+
+<span class="sd">      after: 5000.0 5.297875e-07</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">get_data</span><span class="p">(</span><span class="n">infile</span><span class="p">)</span>
+    <span class="n">normalize_line</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">normalize_line_num</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">ncom_lines</span> <span class="o">=</span> <span class="n">get_ncom_lines</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">infile</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">num</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">lookup</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                <span class="n">normalize_line</span> <span class="o">=</span> <span class="n">line</span>
+                <span class="n">normalize_line_num</span> <span class="o">=</span> <span class="n">num</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="c1">#print (&#39;normalize line = &#39;, line)</span>
+                <span class="c1">#print (&#39;normalize line num = &#39;, num)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;normalize_line            : &#39;</span><span class="p">,</span> <span class="n">normalize_line</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;normalize_line_num        : &#39;</span><span class="p">,</span> <span class="n">normalize_line_num</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;data[normalize_line_num]  :&#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">normalize_line_num</span><span class="p">],</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+
+    <span class="c1">## decrease the flux of normalize line by a factor of 100</span>
+    <span class="n">wave</span> <span class="o">=</span> <span class="n">normalize_line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">flux</span> <span class="o">=</span> <span class="n">normalize_line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;wave = &#39;</span><span class="p">,</span> <span class="n">wave</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;flux = &#39;</span><span class="p">,</span> <span class="n">flux</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+
+    <span class="n">fluxn</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">flux</span><span class="p">)</span> <span class="o">/</span> <span class="mf">100.0</span>
+    
+    <span class="n">normalize_line</span> <span class="o">=</span> <span class="n">normalize_line</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">flux</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">fluxn</span><span class="p">))</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">ncom_lines</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">normalize_line_num</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">normalize_line</span><span class="p">)</span>
+
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">normalize_line</span><span class="p">,</span> <span class="n">normalize_line_num</span><span class="p">)</span></div>
+    
+    
+
+
+<div class="viewcode-block" id="get_breakpoints"><a class="viewcode-back" href="../a2_create_narrowband_seds.html#a2_create_narrowband_seds.get_breakpoints">[docs]</a><span class="k">def</span> <span class="nf">get_breakpoints</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Get breakpoints.</span>
+
+<span class="sd">From red band filter of lsst : phosim/data/lsst/filter_2.txt</span>
+
+<span class="sd">We take wavelength range such that transmission &lt;= 5%, and we get 531 nm - 696 nm</span>
+
+<span class="sd">  0     1     2     3     4     5     6     7     8     9     10    11    12    13    14    15    16    17    18    19    20     21</span>
+<span class="sd">  </span>
+<span class="sd">  5310, 5388, 5467, 5545, 5624, 5703, 5781, 5860, 5938, 6017, 6096, 6174, 6253, 6331, 6410, 6489, 6567, 6646, 6724, 6803, 6882, 6960</span>
+
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+    <span class="n">lambda_start</span> <span class="o">=</span> <span class="mf">5310.0</span>
+    <span class="n">lambda_end</span> <span class="o">=</span> <span class="mf">6960.0</span>
+
+    <span class="c1"># step between sed0 and sed1</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="p">(</span><span class="n">lambda_end</span> <span class="o">-</span> <span class="n">lambda_start</span><span class="p">)</span> <span class="o">/</span> <span class="mf">21.0</span>  <span class="c1"># 7.9 nm</span>
+
+
+    <span class="c1"># sed file has decimal precision 1, so round off step to one precision</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+    <span class="c1">#print(&#39;{} {} {}&#39;.format(&#39;\nlambda_start = &#39;, lambda_start, &#39;nm&#39;))</span>
+    <span class="c1">#print(&#39;{} {} {}&#39;.format(&#39;lambda_end = &#39;, lambda_end, &#39;nm&#39;))</span>
+    <span class="c1">#print(&#39;{} {} {}&#39;.format(&#39;lambda range = &#39;, lambda_end - lambda_start, &#39;nm&#39;))</span>
+    <span class="c1">#print(&#39;{} {} {}&#39;.format(&#39;step = &#39;, step, &#39; nm\n&#39;))</span>
+
+    <span class="n">breakpoints</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">lambda_start</span><span class="p">,</span> <span class="n">lambda_end</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+    <span class="n">breakpoints</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">breakpoints</span><span class="p">,</span> <span class="n">lambda_end</span><span class="p">)</span>
+    <span class="n">breakpoints</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">breakpoints</span><span class="p">]</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="s1">&#39;     &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">22</span><span class="p">))))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;breakpoints = </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">breakpoints</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="p">))</span>
+    <span class="c1">#print(&#39;{} {}{}&#39;.format(&#39;\nlen breakpoints = &#39;, len(breakpoints), &#39;&#39;))</span>
+    
+    <span class="k">return</span> <span class="n">breakpoints</span></div>
+
+
+<div class="viewcode-block" id="get_lin_nums"><a class="viewcode-back" href="../a2_create_narrowband_seds.html#a2_create_narrowband_seds.get_lin_nums">[docs]</a><span class="k">def</span> <span class="nf">get_lin_nums</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Get index of breakpoints.&quot;&quot;&quot;</span>
+    <span class="n">lin_nums</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">breakpoints</span> <span class="o">=</span> <span class="n">get_breakpoints</span><span class="p">()</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fi</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">fi</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+        <span class="n">idx</span><span class="p">,</span> <span class="n">tmpidx</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">breakpoints</span><span class="p">):</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.0&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                    <span class="n">tmpidx</span> <span class="o">=</span> <span class="n">idx</span>
+                    <span class="n">lin_nums</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmpidx</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">lin_nums = </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">lin_nums</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">len lin_nums = </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">lin_nums</span><span class="p">),</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">))</span>
+    
+    <span class="k">return</span> <span class="n">lin_nums</span></div>
+
+
+<div class="viewcode-block" id="check_data"><a class="viewcode-back" href="../a2_create_narrowband_seds.html#a2_create_narrowband_seds.check_data">[docs]</a><span class="k">def</span> <span class="nf">check_data</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Debug data breakpoints and lin_nums.&quot;&quot;&quot;</span>
+    
+    <span class="n">data</span> <span class="o">=</span> <span class="n">get_data</span><span class="p">(</span><span class="n">infile</span><span class="p">)</span>
+    <span class="n">breakpoints</span> <span class="o">=</span> <span class="n">get_breakpoints</span><span class="p">()</span>
+    <span class="n">lin_nums</span> <span class="o">=</span> <span class="n">get_lin_nums</span><span class="p">()</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;data[0]   = </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;len data  = &#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;last data = &#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">[(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)],</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;breakpoints[0] = &#39;</span><span class="p">,</span> <span class="n">breakpoints</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;lin_nums[0]     = &#39;</span><span class="p">,</span> <span class="n">lin_nums</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">))</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;breakpoints[1] = &#39;</span><span class="p">,</span> <span class="n">breakpoints</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;lin_nums[1]     = &#39;</span><span class="p">,</span> <span class="n">lin_nums</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">))</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;breakpoints[19] = &#39;</span><span class="p">,</span> <span class="n">breakpoints</span><span class="p">[</span><span class="mi">19</span><span class="p">],</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;lin_nums[19]     = &#39;</span><span class="p">,</span> <span class="n">lin_nums</span><span class="p">[</span><span class="mi">19</span><span class="p">],</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">))</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;breakpoints[20] = &#39;</span><span class="p">,</span> <span class="n">breakpoints</span><span class="p">[</span><span class="mi">20</span><span class="p">],</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;lin_nums[20]     = &#39;</span><span class="p">,</span> <span class="n">lin_nums</span><span class="p">[</span><span class="mi">20</span><span class="p">],</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">))</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;breakpoints[21] = &#39;</span><span class="p">,</span> <span class="n">breakpoints</span><span class="p">[</span><span class="mi">21</span><span class="p">],</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;lin_nums[21]     = &#39;</span><span class="p">,</span> <span class="n">lin_nums</span><span class="p">[</span><span class="mi">21</span><span class="p">],</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="write_narrowband_seds"><a class="viewcode-back" href="../a2_create_narrowband_seds.html#a2_create_narrowband_seds.write_narrowband_seds">[docs]</a><span class="k">def</span> <span class="nf">write_narrowband_seds</span><span class="p">(</span><span class="n">outfolder</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Write 20 narrowbands and one broadband seds.</span>
+
+<span class="sd">  0     1     2     3     4     5     6     7     8     9     10    11    12    13    14    15    16    17    18    19    20     21</span>
+
+<span class="sd">    </span>
+<span class="sd">[5310, 5388, 5467, 5545, 5624, 5703, 5781, 5860, 5938, 6017, 6096, 6174, 6253, 6331, 6410, 6489, 6567, 6646, 6724, 6803, 6882, 6960]</span>
+
+<span class="sd">[4311, 4389, 4468, 4546, 4625, 4704, 4782, 4861, 4939, 5018, 5097, 5175, 5254, 5332, 5411, 5490, 5568, 5647, 5725, 5804, 5883, 5961] </span>
+
+<span class="sd">For exp9_pf_12gyr_interpolated.cat file:</span>
+
+<span class="sd">narrowband0.sed</span>
+<span class="sd">5310.0 5.8413982e-05</span>
+<span class="sd">5387.0 5.64633062327e-05</span>
+
+<span class="sd">narrowband1.sed</span>
+<span class="sd">5388.0 5.64258902362e-05</span>
+<span class="sd">5466.0 5.65162048804e-05</span>
+
+<span class="sd">narrowband19.sed</span>
+<span class="sd">6803.0 5.78295882118e-05</span>
+<span class="sd">6881.0 5.8806992713e-05</span>
+
+
+<span class="sd">narrowband20.sed</span>
+<span class="sd">6882.0 5.88396263152e-05</span>
+<span class="sd">6960.0 5.86330294926e-05</span>
+
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lin_nums</span> <span class="o">=</span> <span class="n">get_lin_nums</span><span class="p">()</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">get_data</span><span class="p">(</span><span class="n">infile</span><span class="p">)</span>
+    <span class="n">ncom_lines</span> <span class="o">=</span> <span class="n">get_ncom_lines</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">normalize_line</span><span class="p">,</span> <span class="n">normalize_line_num</span> <span class="o">=</span> <span class="n">get_normalizing_line</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="n">lookup</span><span class="p">,</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">replace_outdir</span><span class="p">(</span><span class="n">outfolder</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">writing 21 output files ...&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">))</span>
+    <span class="n">nfiles</span> <span class="o">=</span> <span class="mi">21</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nfiles</span><span class="p">):</span>
+        <span class="n">outfile</span> <span class="o">=</span> <span class="n">outfolder</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="s1">&#39;narrowband</span><span class="si">{:d}</span><span class="s1">.sed&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+
+            <span class="c1"># print</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;writing to the file &#39;</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="s1">&#39;...&#39;</span><span class="p">))</span>
+
+            <span class="c1"># add equal chunk_size data to all files</span>
+            <span class="n">lower</span> <span class="o">=</span> <span class="n">lin_nums</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">upper</span> <span class="o">=</span> <span class="n">lin_nums</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+
+            <span class="c1"># write comment lines</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data</span><span class="p">[:</span><span class="n">ncom_lines</span><span class="p">]))</span>
+
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">):</span>
+                    <span class="n">row</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                    <span class="n">tmp</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span><span class="s1">&#39;        &#39;</span> <span class="o">+</span><span class="s1">&#39;0.0</span><span class="se">\n</span><span class="s1">&#39;</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp</span><span class="p">))</span>
+
+                <span class="c1"># print(&#39;{} {}{}&#39;.format(&#39;\ni = &#39;, i,&#39;&#39; ))</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">lin_nums</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">lin_nums</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="c1"># print(&#39;{} {}{}&#39;.format(&#39;j= &#39;, j,&#39;&#39; ))</span>
+                <span class="n">replace_line</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+                <span class="c1"># print(&#39;{} {}{}&#39;.format(&#39;data[j] = &#39;, data[j],&#39;&#39; ))</span>
+
+        <span class="c1"># add extra lines from index21 to index22 to last file</span>
+        <span class="c1"># -1 is for 695.0</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">20</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">lin_nums</span><span class="p">[</span><span class="mi">20</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">lin_nums</span><span class="p">[</span><span class="mi">21</span><span class="p">],</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">replace_line</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+        <span class="c1"># rewrite normalized line at 500 nm from input sed to all output files</span>
+        <span class="n">replace_line</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="n">normalize_line_num</span><span class="p">,</span> <span class="n">normalize_line</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="write_broadband_sed"><a class="viewcode-back" href="../a2_create_narrowband_seds.html#a2_create_narrowband_seds.write_broadband_sed">[docs]</a><span class="k">def</span> <span class="nf">write_broadband_sed</span><span class="p">(</span><span class="n">outfolder</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Write broadband sed.&quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">get_data</span><span class="p">(</span><span class="n">infile</span><span class="p">)</span>
+    <span class="n">ncom_lines</span> <span class="o">=</span> <span class="n">get_ncom_lines</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">lin_nums</span> <span class="o">=</span> <span class="n">get_lin_nums</span><span class="p">()</span>
+    <span class="n">normalize_line</span><span class="p">,</span> <span class="n">normalize_line_num</span> <span class="o">=</span> <span class="n">get_normalizing_line</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="n">lookup</span><span class="p">,</span><span class="n">data</span><span class="p">)</span>
+    
+    
+    <span class="n">outfile</span> <span class="o">=</span> <span class="n">outfolder</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="s1">&#39;broadband.sed&#39;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;writing to the file &#39;</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="s1">&#39;...&#39;</span><span class="p">))</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+
+        <span class="c1"># write comments</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data</span><span class="p">[:</span><span class="n">ncom_lines</span><span class="p">]))</span>
+
+        <span class="c1"># change column two to zeros</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">):</span>
+                <span class="n">row</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39;        &#39;</span> <span class="o">+</span> <span class="s1">&#39;0.0</span><span class="se">\n</span><span class="s1">&#39;</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp</span><span class="p">))</span>
+
+        <span class="c1"># replace line between lambda_start and lambda_end</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">lin_nums</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">lin_nums</span><span class="p">[</span><span class="mi">21</span><span class="p">],</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">replace_line</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+
+        <span class="c1"># add one more line</span>
+        <span class="n">replace_line</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+
+
+    <span class="c1"># rewrite normalized line at 500 nm from input sed to all output files</span>
+    <span class="n">replace_line</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="n">normalize_line_num</span><span class="p">,</span> <span class="n">normalize_line</span><span class="p">)</span>
+
+    <span class="c1"># output info</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">input sed            : &#39;</span><span class="p">,</span> <span class="n">infile</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;output folder        : &#39;</span><span class="p">,</span> <span class="n">outfolder</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;output broadband sed :&#39;</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../a2_create_narrowband_seds.html#a2_create_narrowband_seds.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span> 
+    <span class="n">data</span> <span class="o">=</span> <span class="n">get_data</span><span class="p">(</span><span class="n">infile</span><span class="p">)</span>
+    <span class="n">ncom_lines</span> <span class="o">=</span> <span class="n">get_ncom_lines</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">normalize_line</span><span class="p">,</span> <span class="n">normalize_line_num</span> <span class="o">=</span> <span class="n">get_normalizing_line</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="n">lookup</span><span class="p">,</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">breakpoints</span> <span class="o">=</span> <span class="n">get_breakpoints</span><span class="p">()</span>
+    <span class="n">lin_nums</span> <span class="o">=</span> <span class="n">get_lin_nums</span><span class="p">()</span>
+    <span class="c1">#check_data()</span>
+    <span class="n">write_narrowband_seds</span><span class="p">(</span><span class="n">outfolder</span><span class="p">)</span>
+    <span class="n">write_broadband_sed</span><span class="p">(</span><span class="n">outfolder</span><span class="p">)</span></div>
+    
+    
+<span class="c1">##==============================================================================</span>
+<span class="c1">## Main program</span>
+<span class="c1">##==============================================================================</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c1"># Run main program</span>
+    <span class="n">main</span><span class="p">()</span>
+
+
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bhishan&#39;s 1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Bhishan Poudel.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.
+    </div>
+  </body>
+</html>

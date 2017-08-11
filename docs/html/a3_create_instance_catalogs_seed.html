@@ -1,0 +1,171 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>a3_create_instance_catalogs_seed &#8212; Bhishan&#39;s 1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/sidebar.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="a4_run_phosim_all_catalogs" href="a4_run_phosim_all_catalogs.html" />
+    <link rel="prev" title="a2_create_narrowband_seds" href="a2_create_narrowband_seds.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="a4_run_phosim_all_catalogs.html" title="a4_run_phosim_all_catalogs"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="a2_create_narrowband_seds.html" title="a2_create_narrowband_seds"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bhishan&#39;s 1 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-a3_create_instance_catalogs_seed">
+<span id="a3-create-instance-catalogs-seed"></span><h1>a3_create_instance_catalogs_seed<a class="headerlink" href="#module-a3_create_instance_catalogs_seed" title="Permalink to this headline">¶</a></h1>
+<p>This script will create instance catalogs for the phosim software.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Depends:</th><td class="field-body"><ol class="first arabic simple">
+<li>~/phosim/phosim</li>
+<li>narrowband_seds/<a href="#id1"><span class="problematic" id="id2">*</span></a>.sed</li>
+</ol>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><p class="first">instance_catalogs/narrowband*.icat</p>
+<p>instance_catalogs/broadband.icat</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Runtime:</th><td class="field-body"><p class="first last">1 second</p>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="function">
+<dt id="a3_create_instance_catalogs_seed.create_catalogs">
+<code class="descclassname">a3_create_instance_catalogs_seed.</code><code class="descname">create_catalogs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/a3_create_instance_catalogs_seed.html#create_catalogs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#a3_create_instance_catalogs_seed.create_catalogs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create catalogs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body">argument: a number for SIM_SEED</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body">instance_catalogs/narrowband*.icat</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<ol class="last arabic">
+<li><p class="first">This program creates instance catalogs with different SIM_SEED variables.</p>
+</li>
+<li><p class="first">sed path in instance catalogs is relative to phosim/data/SEDS/ directory</p>
+<p>phosim = /Users/poudel/phosim/phosim.py</p>
+<p>SEDs   = /Users/poudel/phosim/data/SEDs/mySEDs</p>
+<p>../../../ is Home.</p>
+</li>
+</ol>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="a3_create_instance_catalogs_seed.replace_outfolder">
+<code class="descclassname">a3_create_instance_catalogs_seed.</code><code class="descname">replace_outfolder</code><span class="sig-paren">(</span><em>outfolder</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/a3_create_instance_catalogs_seed.html#replace_outfolder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#a3_create_instance_catalogs_seed.replace_outfolder" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="a2_create_narrowband_seds.html"
+                        title="previous chapter">a2_create_narrowband_seds</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="a4_run_phosim_all_catalogs.html"
+                        title="next chapter">a4_run_phosim_all_catalogs</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/a3_create_instance_catalogs_seed.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="a4_run_phosim_all_catalogs.html" title="a4_run_phosim_all_catalogs"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="a2_create_narrowband_seds.html" title="a2_create_narrowband_seds"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bhishan&#39;s 1 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Bhishan Poudel.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.
+    </div>
+  </body>
+</html>

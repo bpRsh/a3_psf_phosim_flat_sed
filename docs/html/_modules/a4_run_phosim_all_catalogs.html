@@ -1,0 +1,250 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>a4_run_phosim_all_catalogs &#8212; Bhishan&#39;s 1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/sidebar.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bhishan&#39;s 1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for a4_run_phosim_all_catalogs</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># Author      : Bhishan Poudel; Physics Graduate Student, Ohio University</span>
+<span class="c1"># Date        : Aug 20, 2016</span>
+<span class="c1"># Last update : Jul 19, 2017 Wed</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">:Depends: </span>
+<span class="sd"> </span>
+<span class="sd">  * instance_catalogs/narrowband*.icat</span>
+<span class="sd">  * narrowband_seds/narrowband*.sed</span>
+<span class="sd">  * backgrounds/background1.bkg</span>
+
+<span class="sd">:Outputs: </span>
+
+<span class="sd">  * phosim_output_zipped/narrowband*/17_zipped_psf_fitsfiles</span>
+<span class="sd">           </span>
+<span class="sd">:Runtime:</span>
+<span class="sd">    Time taken: 2 days, 7 hours,           21 minutes, 32.907248 seconds.</span>
+<span class="sd">    Machine   : Macos Mavericks pisces 8 GB RAM</span>
+<span class="sd">    Exptime   : SIM_VISTIME 300</span>
+<span class="sd">    SED       : original_seds/exp9_pf_12gyr_interpolated.cat and its childeren.</span>
+
+<span class="sd">           </span>
+<span class="sd">.. note::</span>
+
+<span class="sd">    1. The program a1_create_background.py will create backgrounds/background1.bkg</span>
+
+<span class="sd">    2. The program a2_create_seds.py will create narrowband_seds/narrowband*.sed and</span>
+<span class="sd">    narrowband_seds/broadband.sed.</span>
+
+<span class="sd">    3. The program a3_create_instance_catalogs.py will create instance_catalogs/narrowband*.icat and</span>
+<span class="sd">    instance_catalogs/broadband.icat.</span>
+
+<span class="sd">    4. We can change seed, magnitude , sed etc while creating instance catalogs.</span>
+
+<span class="sd">    5. For 21 input instance catalogs this program will create 21 unzipped psfs.</span>
+
+<span class="sd">    6. We need only electron image and for that we will use a5_unzip_all_psf.py.</span>
+<span class="sd">    </span>
+<span class="sd">       </span>
+<span class="sd">.. warning::</span>
+
+<span class="sd">   To run phosim, we should use python2 not the ananconda python3.</span>
+<span class="sd">   `export PATH=&quot;/Library/Frameworks/Python.framework/Versions/2.7/bin:${PATH}&quot;`</span>
+<span class="sd">   </span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># Imports</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>  
+<span class="kn">import</span> <span class="nn">os</span>     
+<span class="kn">import</span> <span class="nn">shutil</span> 
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<div class="viewcode-block" id="replace_outdir"><a class="viewcode-back" href="../a4_run_phosim_all_catalogs.html#a4_run_phosim_all_catalogs.replace_outdir">[docs]</a><span class="k">def</span> <span class="nf">replace_outdir</span><span class="p">(</span><span class="n">outdir</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Replace a folder.&quot;&quot;&quot;</span>    
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">outdir</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Replacing folder: </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">outdir</span><span class="p">)</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Making new folder: </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">outdir</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="run_phosim"><a class="viewcode-back" href="../a4_run_phosim_all_catalogs.html#a4_run_phosim_all_catalogs.run_phosim">[docs]</a><span class="k">def</span> <span class="nf">run_phosim</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;Run the phosim program.</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="c1"># clobber output folder </span>
+    <span class="n">output</span> <span class="o">=</span> <span class="s1">&#39;phosim_output_zipped&#39;</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">output</span><span class="p">):</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+
+    <span class="c1"># catalogs</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">21</span><span class="p">):</span>
+        
+        <span class="n">subprogram</span> <span class="o">=</span> <span class="s1">&#39;narrowband</span><span class="si">{:d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1"> Begin running Phosim for catalog :&#39;</span><span class="p">,</span><span class="n">subprogram</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="p">))</span>
+    
+    
+        <span class="c1"># create output dir</span>
+        <span class="n">outputdir1</span> <span class="o">=</span> <span class="n">output</span> <span class="o">+</span> <span class="s1">&#39;/narrowband</span><span class="si">{:d}</span><span class="s1">_out&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">outputdir1</span><span class="p">)</span>
+    
+        <span class="c1"># commands to run relative to phosim installation folder</span>
+        <span class="n">instance_catalog</span>  <span class="o">=</span> <span class="s1">&#39;/Users/poudel/Research/psf_creation_phosim/scripts/&#39;</span> <span class="o">+</span> \
+                            <span class="s1">&#39;instance_catalogs/&#39;</span> <span class="o">+</span> \
+                            <span class="s1">&#39;narrowband</span><span class="si">{:d}</span><span class="s1">.icat&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                  
+        <span class="n">background</span>        <span class="o">=</span> <span class="s1">&#39;/Users/poudel/Research/psf_creation_phosim/scripts/&#39;</span> <span class="o">+</span>\
+                            <span class="s1">&#39;backgrounds/background1.bkg&#39;</span>
+        
+        <span class="n">outputdir2</span>        <span class="o">=</span> <span class="s1">&#39;/Users/poudel/Research/psf_creation_phosim/scripts/&#39;</span> <span class="o">+</span> <span class="n">outputdir1</span>
+        
+        <span class="n">commands</span> <span class="o">=</span> <span class="s1">&#39;cd ~/phosim;&#39;</span> <span class="o">+</span> \
+                   <span class="s1">&#39; ./phosim &#39;</span>   <span class="o">+</span> <span class="n">instance_catalog</span> <span class="o">+</span> \
+                   <span class="s1">&#39; -c &#39;</span>         <span class="o">+</span> <span class="n">background</span> <span class="o">+</span> \
+                   <span class="s1">&#39; -o &#39;</span>         <span class="o">+</span> <span class="n">outputdir2</span>
+              
+    
+        <span class="c1"># run the program</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">commands</span><span class="p">,</span><span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1"> End running Phosim for catalog :&#39;</span><span class="p">,</span><span class="n">subprogram</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="p">))</span></div>
+        
+ 
+
+
+
+<div class="viewcode-block" id="run_phosim_broadband"><a class="viewcode-back" href="../a4_run_phosim_all_catalogs.html#a4_run_phosim_all_catalogs.run_phosim_broadband">[docs]</a><span class="k">def</span> <span class="nf">run_phosim_broadband</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot; Run phosim for broadband sed. &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1"> Begin running Phosim for catalog :&#39;</span><span class="p">,</span><span class="s1">&#39;broadband&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="p">))</span>
+
+    <span class="c1"># output dir</span>
+    <span class="n">outputdir1</span>         <span class="o">=</span> <span class="s1">&#39;phosim_output_zipped/broadband_out&#39;</span>
+    <span class="n">replace_outdir</span><span class="p">(</span><span class="n">outputdir1</span><span class="p">)</span>
+    
+    <span class="c1"># phosim command arguments relative to phosim installtion directory</span>
+    <span class="n">instance_catalog</span>  <span class="o">=</span> <span class="s1">&#39;/Users/poudel/Research/psf_creation_phosim/scripts/instance_catalogs/broadband.icat&#39;</span>          
+    <span class="n">background</span>        <span class="o">=</span> <span class="s1">&#39;/Users/poudel/Research/psf_creation_phosim/scripts/backgrounds/background1.bkg&#39;</span>
+    <span class="n">outputdir2</span>        <span class="o">=</span> <span class="s1">&#39;/Users/poudel/Research/psf_creation_phosim/scripts/phosim_output_zipped/broadband_out&#39;</span>
+    
+    <span class="n">commands</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;cd ~/phosim;&#39;</span> <span class="o">+</span> \
+           <span class="sa">r</span><span class="s1">&#39; ./phosim &#39;</span> <span class="o">+</span> <span class="n">instance_catalog</span> <span class="o">+</span> \
+           <span class="sa">r</span><span class="s1">&#39; -c &#39;</span>       <span class="o">+</span> <span class="n">background</span> <span class="o">+</span> \
+           <span class="sa">r</span><span class="s1">&#39; -o &#39;</span>       <span class="o">+</span> <span class="n">outputdir2</span>
+           
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">commands</span><span class="p">,</span><span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1"> End running Phosim for catalog :&#39;</span><span class="p">,</span><span class="s1">&#39;broadband&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="p">))</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+
+
+    <span class="c1"># beginning time</span>
+    <span class="n">program_begin_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">begin_ctime</span>        <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">ctime</span><span class="p">()</span>
+    
+    <span class="n">run_phosim</span><span class="p">()</span>
+    <span class="n">run_phosim_broadband</span><span class="p">()</span>
+
+
+    <span class="c1"># print the time taken</span>
+    <span class="n">program_end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">end_ctime</span>        <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">ctime</span><span class="p">()</span>
+    <span class="n">seconds</span>          <span class="o">=</span> <span class="n">program_end_time</span> <span class="o">-</span> <span class="n">program_begin_time</span>
+    <span class="n">m</span><span class="p">,</span> <span class="n">s</span>             <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="n">seconds</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
+    <span class="n">h</span><span class="p">,</span> <span class="n">m</span>             <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
+    <span class="n">d</span><span class="p">,</span> <span class="n">h</span>             <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="mi">24</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Begin time: &#39;</span><span class="p">,</span> <span class="n">begin_ctime</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;End   time: &#39;</span><span class="p">,</span> <span class="n">end_ctime</span><span class="p">,</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Time taken: </span><span class="si">{0:.0f}</span><span class="s2"> days, </span><span class="si">{1:.0f}</span><span class="s2"> hours, </span><span class="se">\</span>
+<span class="s2">          </span><span class="si">{2:.0f}</span><span class="s2"> minutes, </span><span class="si">{3:f}</span><span class="s2"> seconds.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span>
+    
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bhishan&#39;s 1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Bhishan Poudel.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.
+    </div>
+  </body>
+</html>
